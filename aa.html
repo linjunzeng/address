@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>仿京东省市联动</title>
+</head>
+<body>
+<style type="text/css">
+*{margin:0px;padding:0px;border:none;}
+ul,li{list-style-type: none;}
+/** 浮动样式 **/
+.fl{display:inline;float:left !important;}
+.fr{display:inline;float:right !important;}
+/** 清除浮动样式 **/
+.clearfix{*+height:1%;}
+.clearfix:after{content:"";display:block;height:0;clear:both;visibility:hidden}
+.hide{display: none;}
+
+
+/* 省市联动 */
+.content{margin:50px auto;width: 250px;}
+
+.store-selector{height:36px;position: relative;}
+.store-selector .text{position:relative;display:inline-block;box-sizing:border-box;margin:5px 0;padding:0 26px 0 10px;height:26px;border:1px solid #ccc;background:#fff;color:#333;line-height:26px;cursor:pointer;}
+.store-selector .text b{position:absolute;top:4px;right:2px;display:block;overflow:hidden;width:18px;height:16px;color:#ccc;font-size:14px;line-height:18px;}
+.store-selector .hasgoods{position:absolute;padding:10px 8px;height:16px;line-height:16px;}
+
+.select{padding: 15px;width: 390px;background: #fff; box-shadow: 2px 2px 3px rgba(0,0,0,.12);border: 1px solid #bcbcbc;position: absolute; top: 44px; left: -45px;z-index: 999;display: none;}
+.select:before{content: "";display: block;border:solid 8px transparent;border-bottom:solid 8px #999;position: absolute;left: 130px;top: -16px;}
+.select:after{content: "";display: block;border:solid 8px transparent;border-bottom:solid 8px #fff;position: absolute;left: 130px;top: -15px;}
+
+.select .select_hear{width: 70%;height: 24px;line-height: 24px;font-size: 12px;font-weight: bold;}
+.select .select_hear li{width: 33.33%;height: 24px;line-height: 24px;border:solid 1px #bcbcbc;border-left:none;box-sizing: border-box;text-align: center;cursor: pointer;}
+.select .select_hear li:first-child{border-left:solid 1px #bcbcbc;}
+.select .select_hear li i{margin:5px 0 5px 4px;width:14px;height:14px;line-height:14px;font-size: 12px;vertical-align: top;display: inline-block;}
+.select .select_hear li.active{border-bottom: none;color:#c30d23;}
+
+.select .select_con{margin-top:4px;width: 100%;}
+.select .select_con .select_con_ul li{padding:2px 0 2px 15px;width: 25%;height:20px;line-height:20px;box-sizing: border-box;overflow: hidden;cursor: pointer;}
+.select .select_con .select_con_ul li.active{color:#c30d23;}
+.select .close{width: 16px;height: 16px;background: url("close-select.png") no-repeat center center #fff;position: absolute;right: -8px;top: -8px;display: block;cursor: pointer;z-index: 99;}
+.down{background: url("icon.png") no-repeat center bottom;}
+.up{background-position: center top;}
+</style>
+<div class="content">
+	<div class="store-selector">
+		<div class="text fl">
+			<span>北京市朝阳区</span><b class="down"></b>
+		</div>
+		<div class="select">
+			<ul class="select_hear clearfix">
+				<li id="province" class="active fl"><span>请选择省</span></li>
+				<li id="city" class="hide fl"><span>请选择市</span></li>
+				<li id="area" class="hide fl"><span>请选择区</span></li>
+			</ul>
+			<div class="select_con">
+				<ul id="con_province" class="select_con_ul clearfix">
+					
+				</ul>
+				<ul id="con_city" class="select_con_ul hide clearfix">
+					
+				</ul>
+				<ul id="con_area" class="select_con_ul hide clearfix">
+					
+				</ul>
+			</div>
+			<div class="close"></div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="addres.js"></script>
+<script type="text/javascript">
+$(function(){
+	var addrArr=dsy.Items;   //省市区数组
+	var address;    //省市区名
+	var province_name,city_name,area_name;             //省市区列表
+	var province_index,city_index;                     //省市位置点
+	$(".store-selector .text").click(function() {      //点击展开列表
+		$(".select").slideToggle();
+	});
+	
+	$(".select_hear li").click(function(){
+		var index=$(this).index();
+		$(this).addClass("active").siblings().removeClass("active");
+		$(".select_con_ul").eq(index).removeClass('hide').siblings().addClass('hide');
+	})
+	getAddArrName(addrArr["0"],"con_province");
+	$("#con_province").on("click","li",function(){
+		province_index=$(this).index();  
+		province_name=setSelectName(this,"province");
+		$("#city").removeClass("hide").addClass("active").siblings().removeClass('active'); 
+		$("#con_city").removeClass('hide').siblings().addClass("hide");
+		//console.log("选择省是:"+province_name,"省编号是"+province_index);					 
+		getAddArrName(addrArr["0_"+province_index],"con_city");
+	})
+	$("#con_city").on("click","li",function(){
+		city_index=$(this).index();  
+		city_name=setSelectName(this,"city");
+		$("#area").removeClass("hide").addClass("active").siblings().removeClass('active'); 
+		$("#con_area").removeClass('hide').siblings().addClass("hide");
+		//console.log("选择城市是:"+city_name,"城市编号是"+city_index);						
+		getAddArrName(addrArr["0_"+province_index+"_"+city_index],"con_area");
+	})
+	$("#con_area").on("click","li",function(){		
+		area_name=setSelectName(this,"area");
+		address=province_name+city_name+area_name;
+		$(".store-selector .text span").html(address);
+		$(".select").slideToggle();
+		//console.log("选择区是:"+city_name);
+	})
+	$(".select .close").click(function(){
+		$(".select").slideToggle();
+	})
+	function setSelectName(_this,id)
+	{
+		var selectName=$(_this).html();         												
+		$(_this).addClass("active").siblings().removeClass("active");						 
+		$("#"+id+" span").html(selectName);
+		console.log(selectName);
+		return selectName;
+	}
+	function getAddArrName(array,id)
+	{
+		var addArr_list="";
+		$.each(array,function(index,value){
+			addArr_list+="<li class='fl'>"+value+"</li>";
+		})
+		$("#"+id).html(addArr_list);
+		//console.log(addArr_list);
+	}
+})
+</script>
+</body>
+</html>
